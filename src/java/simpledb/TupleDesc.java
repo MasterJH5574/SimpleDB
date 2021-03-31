@@ -46,7 +46,7 @@ public final class TupleDesc implements Serializable {
    */
   private final TDItem[] items;
   /**
-   * The length of this of tuples corresponding to this TupleDesc
+   * The length of tuples corresponding to this TupleDesc
    */
   private final int numFields;
   /**
