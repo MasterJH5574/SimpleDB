@@ -1,7 +1,9 @@
 package simpledb;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * TupleDesc describes the schema of a tuple.
@@ -164,8 +166,11 @@ public final class TupleDesc implements Serializable {
    * @throws NoSuchElementException if no field with a matching name is found.
    */
   public int fieldNameToIndex(String name) throws NoSuchElementException {
+    if (name == null) {
+      throw new NoSuchElementException();
+    }
     for (int i = 0; i < this.numFields; ++i) {
-      if (this.items[i].fieldName.equals(name)) {
+      if (name.equals(this.items[i].fieldName)) {
         return i;
       }
     }
