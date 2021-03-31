@@ -18,7 +18,7 @@ public class Tuple implements Serializable {
   /**
    * The fields of this tuple
    */
-  private final Field[] fields;
+  private Field[] fields;
   /**
    * The RecordId of this tuple
    */
@@ -118,5 +118,6 @@ public class Tuple implements Serializable {
    */
   public void resetTupleDesc(TupleDesc td) {
     this.td = td;
+    this.fields = new Field[td.getSize()];
   }
 }
