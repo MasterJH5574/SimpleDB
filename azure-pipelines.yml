@@ -1,0 +1,14 @@
+trigger:
+- master
+
+stages:
+- stage: Test
+  jobs:
+  - job: "linux"
+    pool:
+      vmImage: "ubuntu-16.04"
+    steps:
+    - script: sudo apt update && sudo apt install openjdk-8-jdk && sudo apt install ant
+      displayName: Install dependency
+    - script: export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8 && cd acmdb-lab0 && ant clean && ant test && ant systemtest
+      displayName: Run test and system test
