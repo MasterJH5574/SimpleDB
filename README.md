@@ -21,4 +21,6 @@ Course Project of CS392, Database Management System, Spring 2021
   * I use the id of a file as the id of its corresponding table.
   * I widely use `HashMap`s to avoid iterating over all the tables when searching.
   * I add a helper function to get a table for `getTupleDesc(...)`, `getDatabaseFile(...)` and `getPrimaryKey(...)`.
+* 2021.04.02	Implement class `BufferPool` (the Lab 1 part).
+  * I haven't use any lock so far.
 
