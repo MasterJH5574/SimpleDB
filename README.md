@@ -23,4 +23,5 @@ Course Project of CS392, Database Management System, Spring 2021
   * I add a helper function to get a table for `getTupleDesc(...)`, `getDatabaseFile(...)` and `getPrimaryKey(...)`.
 * 2021.04.02	Implement class `BufferPool` (the Lab 1 part). (I haven't use any lock so far.)
 * 2021.04.02	Implement class `HeapPageId`.
+* 2021.04.02	Implement class `RecordId`.
 
