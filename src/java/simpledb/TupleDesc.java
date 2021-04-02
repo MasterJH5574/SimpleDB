@@ -2,7 +2,9 @@ package simpledb;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 /**
@@ -55,9 +57,15 @@ public final class TupleDesc implements Serializable {
    * The size (in bytes) of tuples corresponding to this TupleDesc
    */
   private final int size;
+  /**
+   * A mapping which maps fieldNames to corresponding indices.
+   */
+  private final Map<String, Integer> nameIndexMap;
 
   /**
    * Helper to calculate the size (in bytes) of tuples corresponding to this TupleDesc
+   *
+   * @return Size in bytes of tuples corresponding to this TupleDesc
    */
   private int calculateSize() {
     int size = 0;
@@ -65,6 +73,19 @@ public final class TupleDesc implements Serializable {
       size += item.fieldType.getLen();
     }
     return size;
+  }
+
+  /**
+   * Helper to construct a mapping from names to corresponding indices
+   *
+   * @return The map constructed
+   */
+  private Map<String, Integer> constructNameIndexMap() {
+    Map<String, Integer> nameIndexMap = new HashMap<>();
+    for (int i = 0; i < this.numFields; ++i) {
+      nameIndexMap.put(items[i].fieldName, i);
+    }
+    return nameIndexMap;
   }
 
   /**
@@ -105,6 +126,7 @@ public final class TupleDesc implements Serializable {
       this.items[i] = new TDItem(typeAr[i], fieldAr[i]);
     }
     this.size = this.calculateSize();
+    this.nameIndexMap = this.constructNameIndexMap();
   }
 
   /**
@@ -121,6 +143,7 @@ public final class TupleDesc implements Serializable {
       this.items[i] = new TDItem(typeAr[i], null);
     }
     this.size = this.calculateSize();
+    this.nameIndexMap = this.constructNameIndexMap();
   }
 
   /**
@@ -166,15 +189,11 @@ public final class TupleDesc implements Serializable {
    * @throws NoSuchElementException if no field with a matching name is found.
    */
   public int fieldNameToIndex(String name) throws NoSuchElementException {
-    if (name == null) {
+    Integer index = this.nameIndexMap.get(name);
+    if (index == null) {
       throw new NoSuchElementException();
     }
-    for (int i = 0; i < this.numFields; ++i) {
-      if (name.equals(this.items[i].fieldName)) {
-        return i;
-      }
-    }
-    throw new NoSuchElementException();
+    return index;
   }
 
   /**
