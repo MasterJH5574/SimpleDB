@@ -17,4 +17,8 @@ Course Project of CS392, Database Management System, Spring 2021
   * For `toString()`, I use word "NONAME" for those fields whose names are `null`.
 * 2021.03.31	Implement class `Tuple`.
   * For `toString()`, I use word "FIELD_NOT_SET" for those fields that have not been set yet.
+* 2021.04.02	Implement class `Catalog`.
+  * I use the id of a file as the id of its corresponding table.
+  * I widely use `HashMap`s to avoid iterating over all the tables when searching.
+  * I add a helper function to get a table for `getTupleDesc(...)`, `getDatabaseFile(...)` and `getPrimaryKey(...)`.
 
