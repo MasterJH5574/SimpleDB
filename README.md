@@ -27,4 +27,5 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2021.04.03	Implement class `HeapPage` (the Lab 1 part).
 * 2021.04.03	Implement class `HeapFile` (the Lab 1 part).
   * For `iterator(...)`, I record a current page number of the iterator and the `Iterator<Tuple>` of the current page. I also write a `fetchPage` method which takes a page number as argument, reads the page into buffer pool, and finally returns the iterator of the tuples in that page. In this way I can utilize the iterator implemented in `HeapPage`.
+* 2021.04.03	Implement class `SeqScan`.
 
