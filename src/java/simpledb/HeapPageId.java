@@ -45,7 +45,7 @@ public class HeapPageId implements PageId {
    * @see BufferPool
    */
   public int hashCode() {
-    return Integer.parseInt(Integer.toString(tid) + pgNo);
+    return ((int) Long.parseLong(Integer.toString(tid) + pgNo));
   }
 
   /**
