@@ -2,7 +2,7 @@
 
 Course Project of CS392, Database Management System, Spring 2021
 
-## Time Line
+## Timeline
 
 ### Lab 0
 
@@ -27,5 +27,10 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2021.04.03	Implement class `HeapPage` (the Lab 1 part).
 * 2021.04.03	Implement class `HeapFile` (the Lab 1 part).
   * For `iterator(...)`, I record a current page number of the iterator and the `Iterator<Tuple>` of the current page. I also write a `fetchPage` method which takes a page number as argument, reads the page into buffer pool, and finally returns the iterator of the tuples in that page. In this way I can utilize the iterator implemented in `HeapPage`.
-* 2021.04.03	Implement class `SeqScan`.
+* 2021.04.03	Implement class `SeqScan`. We can find the file of the table by looking up the catalog. After finding the file, we acquire its `DbFileIterator`. Then almost all the code of `DbIterator` uses the `DbFileIterator` of the underlying file.
+* 2021.04.03	Finish Lab 1.
+  * All the decisions that worth telling are described above. Other decisions are really trivial, so I don't want to talk about them.
+  * I didn't change any API.
+  * I implemented all the code blank for Lab 1.
+  * You can directly see how long I spent by looking this timeline.
 
