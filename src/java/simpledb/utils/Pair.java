@@ -1,4 +1,4 @@
-package simpledb.Utils;
+package simpledb.utils;
 
 public class Pair<Type1, Type2> {
   public Type1 first;
