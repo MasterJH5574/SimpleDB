@@ -34,3 +34,7 @@ Course Project of CS392, Database Management System, Spring 2021
   * I implemented all the code blank for Lab 1.
   * You can directly see how long I spent by looking this timeline.
 
+### Lab 2
+
+* 2021.04.07	Initialize Lab 2.
+* 2021.04.07	Add `Pair` utility.
