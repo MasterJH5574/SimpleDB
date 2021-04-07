@@ -3,6 +3,8 @@ package simpledb;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import simpledb.utils.Pair;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from disk. Access methods call
@@ -14,6 +16,7 @@ import java.util.Map;
  * @Threadsafe all fields are final
  */
 public class BufferPool {
+
   /**
    * Bytes per page, including header.
    */
@@ -34,7 +37,11 @@ public class BufferPool {
   /**
    * A mapping which maps PageIds to pages
    */
-  private final Map<PageId, Page> pages;
+  private final Map<PageId, Pair<Page, Long>> pages;
+  /**
+   * A timer used for implementing LRU
+   */
+  private long timer;
 
   /**
    * Creates a BufferPool that caches up to numPages pages.
@@ -44,6 +51,7 @@ public class BufferPool {
   public BufferPool(int numPages) {
     this.pages = new HashMap<>();
     this.numPages = numPages;
+    this.timer = 0;
   }
 
   public static int getPageSize() {
@@ -76,16 +84,32 @@ public class BufferPool {
   public Page getPage(TransactionId tid, PageId pid, Permissions perm)
       throws TransactionAbortedException, DbException {
     // For lab 1, lock is not implemented yet.
-    Page page = pages.get(pid);
-    if (page != null) {
-      return page;
+    // Step 1. Increase the timer. If the timer reaches the max value, reset it.
+    ++timer;
+    if (timer == Long.MAX_VALUE) {
+      timer = 1;
+      for (Pair<Page, Long> pair : pages.values()) {
+        pair.second = 1L;
+      }
     }
-    if (pages.size() < numPages) {
-      page = Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid);
-      pages.put(pid, page);
-      return page;
+    // Step 2. Query the page from the buffer pool.
+    Pair<Page, Long> pair = pages.get(pid);
+    // Step 3. If the page exists in the buffer pool, set the accessed time and return the page
+    // directly.
+    if (pair != null) {
+      pair.second = this.timer;
+      return pair.first;
     }
-    throw new DbException("Buffer pool full.");
+    // Step 4. The page doesn't exist.
+    // * If the buffer pool is full, we evict a page from buffer pool and read the new page in.
+    // * If the buffer pool is not full, we directly read the page in.
+    if (pages.size() == numPages) {
+      this.evictPage();
+    }
+    assert pages.size() < numPages;
+    Page page = Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid);
+    pages.put(pid, new Pair<>(page, this.timer));
+    return page;
   }
 
   /**
@@ -173,9 +197,9 @@ public class BufferPool {
    * disk so will break simpledb if running in NO STEAL mode.
    */
   public synchronized void flushAllPages() throws IOException {
-    // some code goes here
-    // not necessary for lab1
-
+    for (PageId pid : pages.keySet()) {
+      flushPage(pid);
+    }
   }
 
   /**
@@ -196,8 +220,17 @@ public class BufferPool {
    * @param pid an ID indicating the page to flush
    */
   private synchronized void flushPage(PageId pid) throws IOException {
-    // some code goes here
-    // not necessary for lab1
+    Pair<Page, Long> pair = pages.get(pid);
+    assert pair != null;
+    Page page = pair.first;
+    // If the page is not dirty, just return.
+    if (page.isDirty() == null) {
+      return;
+    }
+    // Write the page back to file, and mark it as clean.
+    DbFile file = Database.getCatalog().getDatabaseFile(page.getId().getTableId());
+    file.writePage(page);
+    page.markDirty(false, null);
   }
 
   /**
@@ -213,8 +246,25 @@ public class BufferPool {
    * updated on disk.
    */
   private synchronized void evictPage() throws DbException {
-    // some code goes here
-    // not necessary for lab1
+    // Step 1. Find the page with minimum accessed time.
+    Entry<PageId, Pair<Page, Long>> evictEntry = null;
+    long minTime = Long.MAX_VALUE;
+    for (Entry<PageId, Pair<Page, Long>> e : pages.entrySet()) {
+      if (e.getValue().second < minTime) {
+        minTime = e.getValue().second;
+        evictEntry = e;
+      }
+    }
+    // Step 2. Flush the selected page.
+    try {
+      flushPage(evictEntry.getKey());
+    } catch (IOException e) {
+      e.printStackTrace();
+      throw new DbException("");
+    }
+    // Step 3. Remove the page from the page map.
+    boolean removeRes = pages.remove(evictEntry.getKey(), evictEntry.getValue());
+    assert removeRes;
   }
 
 }
