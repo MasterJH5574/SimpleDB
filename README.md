@@ -40,4 +40,6 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2021.04.07	Add `Pair` utility.
 * 2021.04.07	Implement page eviction in class `BufferPool`.
   * For eviction policy, I use LRU. I add a timer of type `long`, which represents the number of reads. Each time if eviction is needed, I select a page with minimum accessed time and evict the page.
+* 2021.04.09	Implement class `Predicate` and `IndexPredicate`.
+  * So far I don't know what `IndexPredicate` is used for, and I cannot understand the document of `IndexPredicate#equal(...)`.
 
