@@ -20,7 +20,6 @@ import simpledb.Predicate.Op;
  * BTreeInternalPage, and BTreeRootPtrPage. The format of these pages is described in their
  * constructors.
  *
- * @author Becca Taft
  * @see simpledb.BTreeLeafPage#BTreeLeafPage
  * @see simpledb.BTreeInternalPage#BTreeInternalPage
  * @see simpledb.BTreeHeaderPage#BTreeHeaderPage
@@ -199,8 +198,29 @@ public class BTreeFile implements DbFile {
       BTreePageId pid, Permissions perm,
       Field f)
       throws DbException, TransactionAbortedException {
-    // some code goes here
-    return null;
+    // Step 1. If we are in a leaf page, return this page.
+    if (pid.pgcateg() == BTreePageId.LEAF) {
+      return ((BTreeLeafPage) getPage(tid, dirtypages, pid, perm));
+    }
+    // Step 2. Fetch the current page with permission read-only.
+    BTreeInternalPage curPage = ((BTreeInternalPage) getPage(tid, dirtypages, pid,
+        Permissions.READ_ONLY));
+    Iterator<BTreeEntry> it = curPage.iterator();
+    assert it.hasNext();
+    BTreeEntry curEntry = it.next();
+    // Step 3. If `f` is null, recur into the first child.
+    if (f == null) {
+      return findLeafPage(tid, dirtypages, curEntry.getLeftChild(), perm, f);
+    }
+    // Step 4. Keep iterating until find the suitable page to recur into using comparisons.
+    while (curEntry.getKey().compare(Op.LESS_THAN, f) && it.hasNext()) {
+      curEntry = it.next();
+    }
+    if (curEntry.getKey().compare(Op.GREATER_THAN_OR_EQ, f)) {
+      return findLeafPage(tid, dirtypages, curEntry.getLeftChild(), perm, f);
+    } else {
+      return findLeafPage(tid, dirtypages, curEntry.getRightChild(), perm, f);
+    }
   }
 
   /**
