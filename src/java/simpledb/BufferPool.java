@@ -231,8 +231,7 @@ public class BufferPool {
    * be reused safely
    */
   public synchronized void discardPage(PageId pid) {
-    // some code goes here
-    // not necessary for lab1
+    pages.remove(pid);
   }
 
   /**
