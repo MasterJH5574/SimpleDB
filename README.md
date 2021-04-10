@@ -43,4 +43,7 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2021.04.09	Implement class `Predicate` and `IndexPredicate`.
   * So far I don't know what `IndexPredicate` is used for, and I cannot understand the document of `IndexPredicate#equal(...)`.
 * 2021.04.09	Implement method `findLeafPage(...)` in class `BTreeFile`.
+  * To meet the requirement that "when a key exists in multiple leaf pages, `findLeafPage(...)` should return the left-most leaf page", in my B+ tree a key of a `BTreeEntry` is the maximum key in its left child. I cannot think of other way.
+* 2021.04.10	Implement B+ tree insertion.
+* 2021.04.10	Implement B+ tree deletion.
 
