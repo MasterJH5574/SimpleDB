@@ -801,7 +801,7 @@ public class BTreeFile implements DbFile {
       // Step 3.1. Get the parent key and the key of the entry to be moved.
       Field parentEntryKey = parentEntry.getKey();
       Field rightEntryKey = entries[i].getKey();
-      // Step 3.2. Remove the entry from the left sibling page.
+      // Step 3.2. Remove the entry from the right sibling page.
       rightSibling.deleteKeyAndLeftChild(entries[i]);
       // Step 3.3. Update the entry and insert it to the right page.
       entries[i].setKey(parentEntryKey);
@@ -858,7 +858,7 @@ public class BTreeFile implements DbFile {
       rightPage.deleteTuple(tuples[i]);
       leftPage.insertTuple(tuples[i]);
     }
-    // Step 5. Update the sibling information.
+    // Step 5. Update the sibling pointers.
     if (rightPage.getRightSiblingId() != null) {
       BTreeLeafPage rightSib = ((BTreeLeafPage) getPage(tid, dirtypages,
           rightPage.getRightSiblingId(), Permissions.READ_WRITE));

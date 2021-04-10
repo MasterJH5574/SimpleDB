@@ -32,7 +32,7 @@ Course Project of CS392, Database Management System, Spring 2021
   * All the decisions that worth telling are described above. Other decisions are really trivial, so I don't want to talk about them.
   * I didn't change any API.
   * I implemented all the code blank for Lab 1.
-  * You can directly see how long I spent by looking this timeline.
+  * You can directly see how long I spent by looking at this timeline.
 
 ### Lab 2
 
@@ -44,6 +44,44 @@ Course Project of CS392, Database Management System, Spring 2021
   * So far I don't know what `IndexPredicate` is used for, and I cannot understand the document of `IndexPredicate#equal(...)`.
 * 2021.04.09	Implement method `findLeafPage(...)` in class `BTreeFile`.
   * To meet the requirement that "when a key exists in multiple leaf pages, `findLeafPage(...)` should return the left-most leaf page", in my B+ tree a key of a `BTreeEntry` is the maximum key in its left child. I cannot think of other way.
-* 2021.04.10	Implement B+ tree insertion.
-* 2021.04.10	Implement B+ tree deletion.
+* 2021.04.10	Implement B+ tree insertion. The insertion mainly involves `splitLeafPage(...)` and `splitInternalPage(...)`. I've written my steps in class `BTreeFile`.
+  * For `splitLeafPage(...)`, the steps are:
+    0. Mark the page as dirty.
+    1. Fetch the tuples to be moved.
+    2. Get the middle entry key which would be copied up to the parent.
+    3. Create the new page.
+    4. Move the tuples.
+    5. Fetch the parent page by calling `getParentWithEmptySlots()`. Note that the recursive split happens in this method.
+    6. Update the parent pointers.
+    7. Insert the new entry to the parent.
+    8. Update the sibling pointers.
+    9. Return the desired page.
+  * For `splitInternalPage(...)`, the steps are similar. The differences are that we need to set the new children of `midEntry` and we don't need to update any sibling pointers.
+* 2021.04.10	Implement B+ tree deletion. The deletion involves three "steal"s and two "merge"s. I've also written my steps in class `BTreeFile`.
+  * For `stealFromLeafPage(...)`, the steps are:
+    1. Fetch the tuples to be moved.
+    2. Mote the tuples.
+    3. Update the parent entry.
+  * For `stealFromLeftInternalPage(...)` and `stealFromRightInternalPage(...)`, the steps are:
+    1. Fetch the entries to be moved.
+    2. Mark three pages as dirty.
+    3. Move the entries.
+       * Get the parent key and the key of the entry to be moved.
+       * Remove the entry from the left/right sibling page.
+       * Update the entry and insert it to the right page.
+       * Update the parent pointer of the moved page.
+       * Update the key of the parent entry.
+  * For `mergeLeafPages(...)`, the steps are:
+    1. Fetch the tuples to be moved.
+    2. Mark three pages as dirty.
+    3. Remove the parent entry. Note that the recursive stealing or merging might happen in this method.
+    4. Move the tuples.
+    5. Update the sibling pointers.
+    6. Set the right page as empty.
+  * For `mergeInternalPages(...)`, the steps are almost the same. The differences are that we need to update the parent pointers of the moved pages after merging, and we don't need to update the sibling pointers.
+* 2020.4.10	Finish Lab 2.
+  * All the decisions that worth telling are described above. Seems that there isn't any bonus exercise.
+  * I didn't change any API.
+  * I implemented all the code blank needed for Lab 1, and it can pass all the basic tests and system tests of Lab 1 and Lab 2.
+  * You can directly see how long I spent by looking at this timeline.
 
