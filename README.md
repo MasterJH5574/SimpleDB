@@ -79,7 +79,7 @@ Course Project of CS392, Database Management System, Spring 2021
     5. Update the sibling pointers.
     6. Set the right page as empty.
   * For `mergeInternalPages(...)`, the steps are almost the same. The differences are that we need to update the parent pointers of the moved pages after merging, and we don't need to update the sibling pointers.
-* 2020.4.10	Finish Lab 2.
+* 2020.04.10	Finish Lab 2.
   * All the decisions that worth telling are described above. Seems that there isn't any bonus exercise.
   * I didn't change any API.
   * I implemented all the code blank needed for Lab 1, and it can pass all the basic tests and system tests of Lab 1 and Lab 2.
@@ -87,4 +87,5 @@ Course Project of CS392, Database Management System, Spring 2021
 
 ### Lab 3
 
-* 2021.4.19	Initialize Lab 3.
+* 2021.04.19	Initialize Lab 3.
+* 2021.04.19	Implement class `JoinPredicate`.
