@@ -85,3 +85,6 @@ Course Project of CS392, Database Management System, Spring 2021
   * I implemented all the code blank needed for Lab 1, and it can pass all the basic tests and system tests of Lab 1 and Lab 2.
   * You can directly see how long I spent by looking at this timeline.
 
+### Lab 3
+
+* 2021.4.19	Initialize Lab 3.
