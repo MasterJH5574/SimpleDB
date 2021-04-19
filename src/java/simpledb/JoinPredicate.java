@@ -10,7 +10,9 @@ public class JoinPredicate implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  /** @see JoinPredicate@constructor */
+  /**
+   * @see JoinPredicate@constructor
+   */
   private final int field1;
   private final int field2;
   private final Predicate.Op op;

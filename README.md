@@ -89,3 +89,4 @@ Course Project of CS392, Database Management System, Spring 2021
 
 * 2021.04.19	Initialize Lab 3.
 * 2021.04.19	Implement class `JoinPredicate`.
+* 2021.04.19	Implement operator Filter.
