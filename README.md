@@ -91,3 +91,7 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2021.04.19	Implement class `JoinPredicate`.
 * 2021.04.19	Implement operator Filter.
 * 2021.04.27	Fix a bug in `SeqScan`. This bug will be triggered when closing an already closed `SeqScan` iterator.
+* 2021.04.27	Implement operator Join. To avoid duplicate calculation of the `TupleDesc` of the joined table, I calculate the `TupleDesc` immediately after setting new `child` or `child2`. I adopt the simplest join strategy. The details are as followed:
+  1. I use a field `curChild1` to record the current tuple of `child1`. Initially it is `null`.
+  2. When `fetchNext()` is invoked, we initialize `curChild1` if it is `null`: if `child1` has a next tuple, let `curChild1` be the next tuple. Otherwise we return `null`. 
+  3. Each time when `fetchNext()` is invoked, we iterate over `child2`, trying to find a pair of expected tuple. If found, we return the tuple joined by the pair. Otherwise we check whether `child1` has a next tuple. If so, we set `curChild1` to be the next tuple of `child1` and rewind `child2`. If not, we return `null`.
