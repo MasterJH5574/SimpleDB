@@ -114,8 +114,10 @@ public class SeqScan implements DbIterator {
   }
 
   public void close() {
-    fileIt.close();
-    fileIt = null;
+    if (fileIt != null) {
+      fileIt.close();
+      fileIt = null;
+    }
   }
 
   public void rewind() throws DbException, NoSuchElementException, TransactionAbortedException {
