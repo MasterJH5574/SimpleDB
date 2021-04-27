@@ -90,3 +90,4 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2021.04.19	Initialize Lab 3.
 * 2021.04.19	Implement class `JoinPredicate`.
 * 2021.04.19	Implement operator Filter.
+* 2021.04.27	Fix a bug in `SeqScan`. This bug will be triggered when closing an already closed `SeqScan` iterator.
