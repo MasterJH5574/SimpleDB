@@ -96,4 +96,5 @@ Course Project of CS392, Database Management System, Spring 2021
   2. When `fetchNext()` is invoked, we initialize `curChild1` if it is `null`: if `child1` has a next tuple, let `curChild1` be the next tuple. Otherwise we return `null`. 
   3. Each time when `fetchNext()` is invoked, we iterate over `child2`, trying to find a pair of expected tuple. If found, we return the tuple joined by the pair. Otherwise we check whether `child1` has a next tuple. If so, we set `curChild1` to be the next tuple of `child1` and rewind `child2`. If not, we return `null`.
 * 2021.04.28	Fix a bug in method `toString()` of class `Tuple`, which used byte size as the number of fields.
-* 2021.04.28	Implement IntegerAggregator. I leverage the feature that `null` can be a key of a `Map`. So I use a map to recording the aggregate value for each group value. When `gbfield` is `NO_GROUPING`, I use `null` as the group value for all tuples.
+* 2021.04.28	Implement `IntegerAggregator`. I leverage the feature that `null` can be a key of a `Map`. So I use a map to recording the aggregate value for each group value. When `gbfield` is `NO_GROUPING`, I use `null` as the group value for all tuples.
+* 2021.04.28	Implement `StringAggregator`. The design is almost the same as `IntegerAggregator`.
