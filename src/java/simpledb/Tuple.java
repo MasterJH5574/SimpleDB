@@ -87,8 +87,8 @@ public class Tuple implements Serializable {
    */
   @Override
   public String toString() {
-    String[] strArr = new String[td.getSize()];
-    for (int i = 0; i < td.getSize(); ++i) {
+    String[] strArr = new String[td.numFields()];
+    for (int i = 0; i < td.numFields(); ++i) {
       strArr[i] = fields[i] != null ? fields[i].toString() : "FIELD_NOT_SET";
     }
     return String.join(" ", strArr);
