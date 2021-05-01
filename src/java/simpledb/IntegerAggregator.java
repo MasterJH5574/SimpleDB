@@ -42,8 +42,6 @@ public class IntegerAggregator implements Aggregator {
    * @param what        the aggregation operator
    */
   public IntegerAggregator(int gbfield, Type gbfieldtype, int afield, Op what) {
-    assert what != Op.COUNT;
-
     this.gbfield = gbfield;
     this.gbfieldtype = gbfieldtype;
     this.afield = afield;
@@ -67,7 +65,7 @@ public class IntegerAggregator implements Aggregator {
     switch (what) {
       case MIN: return Integer.MAX_VALUE;
       case MAX: return Integer.MIN_VALUE;
-      case SUM: return 0;
+      case SUM: case COUNT: return 0;
       case AVG: return new Pair<>(0, 0);
     }
     assert false;
@@ -86,6 +84,7 @@ public class IntegerAggregator implements Aggregator {
       case MIN: return Integer.min(((Integer) aggregateValue), newValue);
       case MAX: return Integer.max(((Integer) aggregateValue), newValue);
       case SUM: return ((Integer) aggregateValue) + newValue;
+      case COUNT: return ((Integer) aggregateValue) + 1;
       case AVG:
         assert aggregateValue instanceof Pair;
         @SuppressWarnings("unchecked")
