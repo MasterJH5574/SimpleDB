@@ -180,8 +180,14 @@ public class BufferPool {
     for (Page dirtyPage : dirtyPages) {
       dirtyPage.markDirty(true, tid);
       Pair<Page, Long> pair = pages.get(dirtyPage.getId());
-      assert pair != null;
-      pair.first = dirtyPage;
+      if (pair != null) {
+        pair.first = dirtyPage;
+      } else {
+        if (pages.size() == numPages) {
+          this.evictPage();
+        }
+        pages.put(dirtyPage.getId(), new Pair<>(dirtyPage, ++this.timer));
+      }
     }
   }
 
