@@ -101,3 +101,4 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2021.05.01	Implement operator Aggregate. I do the aggregation when this operator gets opened, and creates an iterator of the aggregator after the aggregation. When invoking `fetchNext()`, I just get the next tuple of the iterator.
 * 2021.05.01	Implement tuple insertion and deletion in class `HeapPage` and `HeapFile`.
 * 2021.05.01	Implement operator Insert.
+* 2021.05.01	Implement operator Delete.
