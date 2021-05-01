@@ -99,3 +99,4 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2021.04.28	Implement `IntegerAggregator`. I leverage the feature that `null` can be a key of a `Map`. So I use a map to recording the aggregate value for each group value. When `gbfield` is `NO_GROUPING`, I use `null` as the group value for all tuples.
 * 2021.04.28	Implement `StringAggregator`. The design is almost the same as `IntegerAggregator`.
 * 2021.05.01	Implement operator Aggregate. I do the aggregation when this operator gets opened, and creates an iterator of the aggregator after the aggregation. When invoking `fetchNext()`, I just get the next tuple of the iterator.
+* 2021.05.01	Implement tuple insertion and deletion in class `HeapPage` and `HeapFile`.
