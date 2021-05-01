@@ -103,3 +103,4 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2021.05.01	Implement operator Insert.
 * 2021.05.01	Implement operator Delete.
 * 2021.05.01	Implement operator HashEquiJoin. The logic doesn't differ much from Join. The main difference is that here I use a `HashMap` to record the tuples in the left table.
+* 2021.05.01	Fix a bug in `BufferPool` that caused by `BufferPoolWriteTest`.
