@@ -82,7 +82,7 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2020.04.10	Finish Lab 2.
   * All the decisions that worth telling are described above. Seems that there isn't any bonus exercise.
   * I didn't change any API.
-  * I implemented all the code blank needed for Lab 1, and it can pass all the basic tests and system tests of Lab 1 and Lab 2.
+  * I implemented all the code blank needed, and it can pass all the basic tests and system tests of Lab 1 and Lab 2.
   * You can directly see how long I spent by looking at this timeline.
 
 ### Lab 3
@@ -104,3 +104,8 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2021.05.01	Implement operator Delete.
 * 2021.05.01	Implement operator HashEquiJoin. The logic doesn't differ much from Join. The main difference is that here I use a `HashMap` to record the tuples in the left table.
 * 2021.05.01	Fix a bug in `BufferPool` that caused by `BufferPoolWriteTest`.
+* 2021.05.01	Finish Lab 3.
+  * All the decisions that worth telling are described above.
+  * I didn't change any API.
+  * I implemented all the code blank needed, and it can pass all the basic tests and system tests of Lab 1, Lab 2 and Lab 3.
+  * You can directly see how long I spent by looking at this timeline.
