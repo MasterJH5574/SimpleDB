@@ -109,3 +109,7 @@ Course Project of CS392, Database Management System, Spring 2021
   * I didn't change any API.
   * I implemented all the code blank needed, and it can pass all the basic tests and system tests of Lab 1, Lab 2 and Lab 3.
   * You can directly see how long I spent by looking at this timeline.
+
+### Lab 4
+
+* 2021.05.11	Initialize Lab 4.
