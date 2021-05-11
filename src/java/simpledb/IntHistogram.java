@@ -6,6 +6,30 @@ package simpledb;
 public class IntHistogram {
 
   /**
+   * @see IntHistogram@constructor
+   */
+  private final int nBuckets;
+  private final int vMin;
+  private final int vMax;
+  /**
+   * Number of tuples.
+   */
+  private int nTuples;
+  /**
+   * The width of each bucket.
+   */
+  private final int width;
+  /**
+   * The number of integers in each bucket.
+   */
+  private final int[] size;
+  /**
+   * The left bound and right bound of each bucket.
+   */
+  private final int[] left;
+  private final int[] right;
+
+  /**
    * Create a new IntHistogram.
    * <p>
    * This IntHistogram should maintain a histogram of integer values that it receives. It should
@@ -25,7 +49,47 @@ public class IntHistogram {
    *                histogramming
    */
   public IntHistogram(int buckets, int min, int max) {
-    // some code goes here
+    this.nBuckets = buckets;
+    this.vMin = min;
+    this.vMax = max;
+    this.nTuples = 0;
+    this.width = (max - min + 1) / nBuckets;
+    this.size = new int[nBuckets];
+    this.left = new int[nBuckets];
+    this.right = new int[nBuckets];
+    for (int i = 0; i < nBuckets; ++i) {
+      left[i] = min + i * width;
+      if (i > 0) {
+        right[i - 1] = left[i] - 1;
+      }
+    }
+    right[nBuckets - 1] = max;
+
+  }
+
+  private int getBucket(int v) {
+    if (v < vMin) {
+      return -1;
+    } else if (v > vMax) {
+      return nBuckets;
+    }
+    int l = 0, r = nBuckets - 1, mid;
+    while (l <= r) {
+      mid = (l + r) / 2;
+      if (v >= left[mid] && v <= right[mid]) {
+        return mid;
+      } else if (v < left[mid]) {
+        r = mid - 1;
+      } else {
+        l = mid + 1;
+      }
+    }
+    assert false;
+    return -1;
+  }
+
+  private int getWidth(int bucket) {
+    return right[bucket] - left[bucket] + 1;
   }
 
   /**
@@ -34,7 +98,9 @@ public class IntHistogram {
    * @param v Value to add to the histogram
    */
   public void addValue(int v) {
-    // some code goes here
+    assert v >= vMin && v <= vMax;
+    ++size[getBucket(v)];
+    ++nTuples;
   }
 
   /**
@@ -48,9 +114,37 @@ public class IntHistogram {
    * @return Predicted selectivity of this particular operator and value
    */
   public double estimateSelectivity(Predicate.Op op, int v) {
+    int bucket = getBucket(v);
+    double estEqual = 0, estLess = 0, estGreater = 0;
+    for (int i = 0; i < nBuckets; ++i) {
+      if (i < bucket) {
+        estLess += ((double) size[i]) / nTuples;
+      } else if (i > bucket) {
+        estGreater += ((double) size[i]) / nTuples;
+      } else {
+        estEqual = ((double) size[bucket]) / getWidth(bucket) / nTuples;
+        estLess += estEqual * (v - left[i]);
+        estGreater += estEqual * (right[i] - v);
+      }
+    }
 
-    // some code goes here
-    return -1.0;
+    switch (op) {
+      case EQUALS:
+      case LIKE:
+        return estEqual;
+      case NOT_EQUALS:
+        return 1 - estEqual;
+      case LESS_THAN:
+        return estLess;
+      case LESS_THAN_OR_EQ:
+        return estLess + estEqual;
+      case GREATER_THAN:
+        return estGreater;
+      case GREATER_THAN_OR_EQ:
+        return estGreater + estEqual;
+    }
+    assert false;
+    return 0;
   }
 
   /**
@@ -60,7 +154,6 @@ public class IntHistogram {
    * if you want to implement a more efficient optimization
    */
   public double avgSelectivity() {
-    // some code goes here
     return 1.0;
   }
 
@@ -68,7 +161,14 @@ public class IntHistogram {
    * @return A string describing this histogram, for debugging purposes
    */
   public String toString() {
-    // some code goes here
-    return null;
+    StringBuilder str = new StringBuilder();
+    str.append("{");
+    for (int i = 0; i < nBuckets; ++i) {
+      str.append("[").append(left[i]).append(", ").append(right[i]).append("]: ").append(size[i]);
+      if (i != nBuckets - 1) {
+        str.append(", ");
+      }
+    }
+    return str.toString();
   }
 }
