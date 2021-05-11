@@ -113,3 +113,4 @@ Course Project of CS392, Database Management System, Spring 2021
 ### Lab 4
 
 * 2021.05.11	Initialize Lab 4.
+* 2021.05.11	Implement class `IntHistogram`. I use the most naive estimation.
