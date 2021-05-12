@@ -24,6 +24,11 @@ public class JoinOptimizer {
 
   LogicalPlan p;
   Vector<LogicalJoinNode> joins;
+  /**
+   * A mapping from powers of 2 to its corresponding LogicalJoinNode in `joins`. It helps to
+   * facilitate enumerating subsets.
+   */
+  private final Map<Long, LogicalJoinNode> int2JoinNode;
 
   /**
    * Constructor
@@ -34,6 +39,13 @@ public class JoinOptimizer {
   public JoinOptimizer(LogicalPlan p, Vector<LogicalJoinNode> joins) {
     this.p = p;
     this.joins = joins;
+    this.int2JoinNode = new HashMap<>();
+    // Construct `int2JoinNode`.
+    long pow = 1;
+    for (LogicalJoinNode joinNode : joins) {
+      int2JoinNode.put(pow, joinNode);
+      pow <<= 1;
+    }
   }
 
   /**
@@ -151,6 +163,10 @@ public class JoinOptimizer {
     }
   }
 
+  private long calcLowbit(long x) {
+    return x & (-x);
+  }
+
   /**
    * Helper method to enumerate all of the subsets of a given size of a specified vector.
    *
@@ -160,26 +176,35 @@ public class JoinOptimizer {
    */
   @SuppressWarnings("unchecked")
   public <T> Set<Set<T>> enumerateSubsets(Vector<T> v, int size) {
-    Set<Set<T>> els = new HashSet<>();
-    els.add(new HashSet<>());
-    // Iterator<Set> it;
-    // long start = System.currentTimeMillis();
+    Set<Long> intResult = new HashSet<>();
+    intResult.add(0L);
 
-    for (int i = 0; i < size; i++) {
-      Set<Set<T>> newels = new HashSet<>();
-      for (Set<T> s : els) {
-        for (T t : v) {
-          Set<T> news = (Set<T>) (((HashSet<T>) s).clone());
-          if (news.add(t)) {
-            newels.add(news);
+    for (int t = 0; t < size; ++t) {
+      Set<Long> old = intResult;
+      intResult = new HashSet<>();
+      for (Long oldS : old) {
+        for (int i = 0; i < v.size(); ++i) {
+          long newS = oldS | (1L << i);
+          if (newS != oldS) {
+            intResult.add(newS);
           }
         }
       }
-      els = newels;
     }
 
-    return els;
-
+    // Construct result.
+    Set<Set<T>> result = new HashSet<>();
+    for (Long intS : intResult) {
+      Set<T> realS = new HashSet<>();
+      long x = intS;
+      while (x != 0) {
+        long lowbit = calcLowbit(x);
+        realS.add(((T) int2JoinNode.get(lowbit)));
+        x -= lowbit;
+      }
+      result.add(realS);
+    }
+    return result;
   }
 
   /**
