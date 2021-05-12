@@ -116,3 +116,5 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2021.05.11	Implement class `IntHistogram`. I use the most naive estimation.
 * 2021.05.12	Implement class `TableStats`. The implementation is quite naive.
 * 2021.05.12	Implement class `JoinOptimizer`. I follow the methods described in the document.
+* 2021.05.12	Implement an *improved subset iterator*, which is counted as a *bonus*. I use bitset to represent a subset during the enumeration. Using bitset yields the enumeration result in forms of integers. Thus the key problem is to convert the integer bitset into a set of elements. One possible way is to check every elements in the universal set and add those elements that are contained in the integer bitset. But it is inefficient when the universal set becomes larger. To make it faster, I use lowbit to help find the elements in the bitset. To this end I record relationship between the powers of 2 and the elements in a mapping ahead of time. In the end, the `bigOrderJoinsTest` unit test in `JoinOptimizerTest.java` runs ~3.6x faster than the original design.
+
