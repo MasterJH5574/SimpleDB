@@ -14,6 +14,7 @@ import javax.swing.JTree;
 import javax.swing.WindowConstants;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import simpledb.Predicate.Op;
 
 /**
  * The JoinOptimizer class is responsible for ordering a series of joins optimally, and for
@@ -48,7 +49,7 @@ public class JoinOptimizer {
   public static DbIterator instantiateJoin(LogicalJoinNode lj, DbIterator plan1, DbIterator plan2)
       throws ParsingException {
 
-    int t1id = 0, t2id = 0;
+    int t1id, t2id;
     DbIterator j;
 
     try {
@@ -94,14 +95,12 @@ public class JoinOptimizer {
       double cost2) {
     if (j instanceof LogicalSubplanJoinNode) {
       // A LogicalSubplanJoinNode represents a subquery.
-      // You do not need to implement proper support for these for Lab 5.
       return card1 + cost1 + cost2;
     } else {
-      // Insert your code here.
       // HINT: You may need to use the variable "j" if you implemented
       // a join algorithm that's more complicated than a basic
       // nested-loops join.
-      return -1.0;
+      return cost1 + card1 * cost2 + card1 * card2;
     }
   }
 
@@ -121,7 +120,6 @@ public class JoinOptimizer {
       boolean t2pkey, Map<String, TableStats> stats) {
     if (j instanceof LogicalSubplanJoinNode) {
       // A LogicalSubplanJoinNode represents a subquery.
-      // You do not need to implement proper support for these for Lab 5.
       return card1;
     } else {
       return estimateTableJoinCardinality(j.p, j.t1Alias, j.t2Alias, j.f1PureName, j.f2PureName,
@@ -136,9 +134,21 @@ public class JoinOptimizer {
       String table2Alias, String field1PureName, String field2PureName, int card1, int card2,
       boolean t1pkey, boolean t2pkey, Map<String, TableStats> stats,
       Map<String, Integer> tableAliasToId) {
-    int card = 1;
-    // some code goes here
-    return card <= 0 ? 1 : card;
+    if (joinOp == Op.EQUALS || joinOp == Op.LIKE || joinOp == Op.NOT_EQUALS) {
+      int eqCard;
+      if (t1pkey && t2pkey) {
+        eqCard = Integer.min(card1, card2);
+      } else if (t1pkey) {
+        eqCard = card2;
+      } else if (t2pkey) {
+        eqCard = card1;
+      } else {
+        eqCard = Integer.max(card1, card2);
+      }
+      return joinOp == Op.NOT_EQUALS ? card1 * card2 - eqCard : eqCard;
+    } else {
+      return ((int) (0.3 * card1 * card2));
+    }
   }
 
   /**
@@ -150,13 +160,13 @@ public class JoinOptimizer {
    */
   @SuppressWarnings("unchecked")
   public <T> Set<Set<T>> enumerateSubsets(Vector<T> v, int size) {
-    Set<Set<T>> els = new HashSet<Set<T>>();
-    els.add(new HashSet<T>());
+    Set<Set<T>> els = new HashSet<>();
+    els.add(new HashSet<>());
     // Iterator<Set> it;
     // long start = System.currentTimeMillis();
 
     for (int i = 0; i < size; i++) {
-      Set<Set<T>> newels = new HashSet<Set<T>>();
+      Set<Set<T>> newels = new HashSet<>();
       for (Set<T> s : els) {
         for (T t : v) {
           Set<T> news = (Set<T>) (((HashSet<T>) s).clone());
@@ -189,11 +199,30 @@ public class JoinOptimizer {
    */
   public Vector<LogicalJoinNode> orderJoins(HashMap<String, TableStats> stats,
       HashMap<String, Double> filterSelectivities, boolean explain) throws ParsingException {
-    //Not necessary for labs 1--3
+    PlanCache pc = new PlanCache();
+    for (int i = 1; i <= joins.size(); ++i) {
+      Set<Set<LogicalJoinNode>> subsets = enumerateSubsets(joins, i);
+      for (Set<LogicalJoinNode> joinSet : subsets) {
+        CostCard bestPlan = new CostCard();
+        bestPlan.cost = Double.MAX_VALUE;
+        for (LogicalJoinNode toRemove : joinSet) {
+          CostCard plan = computeCostAndCardOfSubplan(stats, filterSelectivities, toRemove, joinSet,
+              bestPlan.cost, pc);
+          if (plan != null && plan.cost < bestPlan.cost) {
+            bestPlan.cost = plan.cost;
+            bestPlan.card = plan.card;
+            bestPlan.plan = plan.plan;
+          }
+          pc.addPlan(joinSet, bestPlan.cost, bestPlan.card, bestPlan.plan);
+        }
+      }
+    }
 
-    // some code goes here
-    //Replace the following
-    return joins;
+    Vector<LogicalJoinNode> bestOrder = pc.getOrder(new HashSet<>(joins));
+    if (explain) {
+      printJoins(bestOrder, pc, stats, filterSelectivities);
+    }
+    return bestOrder;
   }
 
   // ===================== Private Methods =================================
@@ -247,7 +276,7 @@ public class JoinOptimizer {
     boolean leftPkey, rightPkey;
 
     if (news.isEmpty()) { // base case -- both are base relations
-      prevBest = new Vector<LogicalJoinNode>();
+      prevBest = new Vector<>();
       t1cost = stats.get(table1Name).estimateScanCost();
       t1card = stats.get(table1Name).estimateTableCardinality(filterSelectivities.get(j.t1Alias));
       leftPkey = isPkey(j.t1Alias, j.f1PureName);
@@ -255,7 +284,7 @@ public class JoinOptimizer {
       t2cost = table2Alias == null ? 0 : stats.get(table2Name).estimateScanCost();
       t2card = table2Alias == null ? 0
           : stats.get(table2Name).estimateTableCardinality(filterSelectivities.get(j.t2Alias));
-      rightPkey = table2Alias == null ? false : isPkey(table2Alias, j.f2PureName);
+      rightPkey = table2Alias != null && isPkey(table2Alias, j.f2PureName);
     } else {
       // news is not empty -- figure best way to join j to news
       prevBest = pc.getOrder(news);
@@ -280,7 +309,7 @@ public class JoinOptimizer {
         t2cost = j.t2Alias == null ? 0 : stats.get(table2Name).estimateScanCost();
         t2card = j.t2Alias == null ? 0
             : stats.get(table2Name).estimateTableCardinality(filterSelectivities.get(j.t2Alias));
-        rightPkey = j.t2Alias == null ? false : isPkey(j.t2Alias, j.f2PureName);
+        rightPkey = j.t2Alias != null && isPkey(j.t2Alias, j.f2PureName);
       } else if (doesJoin(prevBest, j.t2Alias)) { // j.t2 is in prevbest
         // (both
         // shouldn't be)
@@ -388,13 +417,13 @@ public class JoinOptimizer {
 
     f.setSize(300, 500);
 
-    HashMap<String, DefaultMutableTreeNode> m = new HashMap<String, DefaultMutableTreeNode>();
+    HashMap<String, DefaultMutableTreeNode> m = new HashMap<>();
 
     // int numTabs = 0;
 
     // int k;
-    DefaultMutableTreeNode root = null, treetop = null;
-    HashSet<LogicalJoinNode> pathSoFar = new HashSet<LogicalJoinNode>();
+    DefaultMutableTreeNode root, treetop = null;
+    HashSet<LogicalJoinNode> pathSoFar = new HashSet<>();
     boolean neither;
 
     System.out.println(js);
