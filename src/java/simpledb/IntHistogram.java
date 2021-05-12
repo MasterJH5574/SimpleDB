@@ -16,10 +16,6 @@ public class IntHistogram {
    */
   private int nTuples;
   /**
-   * The width of each bucket.
-   */
-  private final int width;
-  /**
    * The number of integers in each bucket.
    */
   private final int[] size;
@@ -53,10 +49,10 @@ public class IntHistogram {
     this.vMin = min;
     this.vMax = max;
     this.nTuples = 0;
-    this.width = (max - min + 1) / nBuckets;
     this.size = new int[nBuckets];
     this.left = new int[nBuckets];
     this.right = new int[nBuckets];
+    int width = (max - min + 1) / nBuckets;
     for (int i = 0; i < nBuckets; ++i) {
       left[i] = min + i * width;
       if (i > 0) {
