@@ -115,3 +115,4 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2021.05.11	Initialize Lab 4.
 * 2021.05.11	Implement class `IntHistogram`. I use the most naive estimation.
 * 2021.05.12	Implement class `TableStats`. The implementation is quite naive.
+* 2021.05.12	Implement class `JoinOptimizer`. I follow the methods described in the document.
