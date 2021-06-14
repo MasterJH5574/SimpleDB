@@ -124,3 +124,8 @@ Course Project of CS392, Database Management System, Spring 2021
   * I implemented all the code blank needed, and it can pass all the basic tests and system tests of Lab 1, Lab 2, Lab3 and Lab 4.
   * You can directly see how long I spent by looking at this timeline.
 
+### Lab 5
+
+* 2021.06.14	Initialize Lab 5.
+* 2021.06.14	Implement a class `LockManager` to help manage all the locks. Implement lock acquirement and release.
+

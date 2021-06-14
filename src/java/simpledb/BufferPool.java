@@ -43,6 +43,10 @@ public class BufferPool {
    * A timer used for implementing LRU
    */
   private long timer;
+  /**
+   * The lock manager
+   */
+  private final LockManager lockManager;
 
   /**
    * Creates a BufferPool that caches up to numPages pages.
@@ -53,6 +57,7 @@ public class BufferPool {
     this.pages = new HashMap<>();
     this.numPages = numPages;
     this.timer = 0;
+    this.lockManager = new LockManager();
   }
 
   public static int getPageSize() {
@@ -84,7 +89,8 @@ public class BufferPool {
    */
   public Page getPage(TransactionId tid, PageId pid, Permissions perm)
       throws TransactionAbortedException, DbException {
-    // For lab 1, lock is not implemented yet.
+    // Step 0. Acquire a lock for the page, according to `perm`.
+    lockManager.acquireLock(tid, pid, perm);
     // Step 1. Increase the timer. If the timer reaches the max value, reset it.
     ++timer;
     if (timer == Long.MAX_VALUE) {
@@ -121,8 +127,7 @@ public class BufferPool {
    * @param pid the ID of the page to unlock
    */
   public void releasePage(TransactionId tid, PageId pid) {
-    // some code goes here
-    // not necessary for lab1|lab2
+    lockManager.releaseLock(tid, pid);
   }
 
   /**
@@ -138,10 +143,8 @@ public class BufferPool {
   /**
    * Return true if the specified transaction has a lock on the specified page
    */
-  public boolean holdsLock(TransactionId tid, PageId p) {
-    // some code goes here
-    // not necessary for lab1|lab2
-    return false;
+  public boolean holdsLock(TransactionId tid, PageId pid) {
+    return lockManager.holdsLock(tid, pid, Permissions.READ_ONLY);
   }
 
   /**
