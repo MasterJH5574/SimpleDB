@@ -128,4 +128,6 @@ Course Project of CS392, Database Management System, Spring 2021
 
 * 2021.06.14	Initialize Lab 5.
 * 2021.06.14	Implement a class `LockManager` to help manage all the locks. Implement lock acquirement and release.
+* 2020.06.14	Implement "NO STEAL". Evict clean pages only.
+* 2020.06.14	Implement transaction commit and abortion.
 
