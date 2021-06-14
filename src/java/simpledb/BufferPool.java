@@ -136,8 +136,7 @@ public class BufferPool {
    * @param tid the ID of the transaction requesting the unlock
    */
   public void transactionComplete(TransactionId tid) throws IOException {
-    // some code goes here
-    // not necessary for lab1|lab2
+    transactionComplete(tid, true);
   }
 
   /**
@@ -155,8 +154,23 @@ public class BufferPool {
    */
   public void transactionComplete(TransactionId tid, boolean commit)
       throws IOException {
-    // some code goes here
-    // not necessary for lab1|lab2
+    ArrayList<PageId> lockedPages = new ArrayList<>(lockManager.getLockedPages(tid));
+    for (PageId pid : lockedPages) {
+      if (commit) {
+        if (pages.containsKey(pid)) {
+          flushPage(pid);
+        }
+      } else {
+        if (pages.containsKey(pid) && pages.get(pid).first.isDirty() != null) {
+          Page page = Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid);
+          pages.get(pid).first = page;
+          page.markDirty(false, null);
+        }
+      }
+    }
+    for (PageId pid : lockedPages) {
+      releasePage(tid, pid);
+    }
   }
 
   /**

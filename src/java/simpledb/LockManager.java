@@ -132,4 +132,8 @@ public class LockManager {
       lock.holders.remove(tid);
     }
   }
+
+  public ArrayList<PageId> getLockedPages(TransactionId tid) {
+    return tid2LockedPages.get(tid);
+  }
 }
