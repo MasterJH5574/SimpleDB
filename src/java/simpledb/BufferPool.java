@@ -280,8 +280,11 @@ public class BufferPool {
    * Write all pages of the specified transaction to disk.
    */
   public synchronized void flushPages(TransactionId tid) throws IOException {
-    // some code goes here
-    // not necessary for lab1|lab2
+    for (Entry<PageId, Pair<Page, Long>> e : pages.entrySet()) {
+      if (e.getValue().first.isDirty() == tid) {
+        flushPage(e.getKey());
+      }
+    }
   }
 
   /**
