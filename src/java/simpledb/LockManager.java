@@ -75,7 +75,6 @@ public class LockManager {
     } else {
       acquireXLock(tid, pid);
     }
-    // Todo
   }
 
   private void acquireSLock(TransactionId tid, PageId pid) {
