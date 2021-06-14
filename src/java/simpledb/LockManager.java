@@ -16,17 +16,17 @@ public class LockManager {
     }
   }
 
-  private final ConcurrentHashMap<TransactionId, ArrayList<PageId>> tid2Locks;
+  private final ConcurrentHashMap<TransactionId, ArrayList<PageId>> tid2LockedPages;
   private final ConcurrentHashMap<PageId, Lock> page2Lock;
 
   public LockManager() {
-    tid2Locks = new ConcurrentHashMap<>();
+    tid2LockedPages = new ConcurrentHashMap<>();
     page2Lock = new ConcurrentHashMap<>();
   }
 
   public boolean holdsLock(TransactionId tid, PageId pid, Permissions perm) {
     if (page2Lock.get(pid) == null) {
-      assert tid2Locks.get(tid) == null || !tid2Locks.get(tid).contains(pid);
+      assert tid2LockedPages.get(tid) == null || !tid2LockedPages.get(tid).contains(pid);
       return false;
     }
     Lock lock = page2Lock.get(pid);
@@ -34,14 +34,14 @@ public class LockManager {
       assert lock != null;
 
       if (!lock.holders.contains(tid)) {
-        assert tid2Locks.get(tid) == null || !tid2Locks.get(tid).contains(pid);
+        assert tid2LockedPages.get(tid) == null || !tid2LockedPages.get(tid).contains(pid);
         return false;
       }
       boolean res = perm == Permissions.READ_ONLY || lock.type == LockType.exclusive;
       if (res) {
-        assert tid2Locks.get(tid) != null && tid2Locks.get(tid).contains(pid);
+        assert tid2LockedPages.get(tid) != null && tid2LockedPages.get(tid).contains(pid);
       } else {
-        assert tid2Locks.get(tid) == null || !tid2Locks.get(tid).contains(pid) || (
+        assert tid2LockedPages.get(tid) == null || !tid2LockedPages.get(tid).contains(pid) || (
             perm == Permissions.READ_WRITE && lock.type == LockType.shared);
       }
       return res;
@@ -60,8 +60,8 @@ public class LockManager {
   }
 
   private void addLock(TransactionId tid, PageId pid) {
-    tid2Locks.putIfAbsent(tid, new ArrayList<>());
-    ArrayList<PageId> pageIds = tid2Locks.get(tid);
+    tid2LockedPages.putIfAbsent(tid, new ArrayList<>());
+    ArrayList<PageId> pageIds = tid2LockedPages.get(tid);
     assert !pageIds.contains(pid);
     pageIds.add(pid);
   }
@@ -126,10 +126,14 @@ public class LockManager {
     assert lock.holders.contains(tid);
 
     synchronized (lock) {
-      ArrayList<PageId> heldLocks = tid2Locks.get(tid);
+      ArrayList<PageId> heldLocks = tid2LockedPages.get(tid);
       assert heldLocks != null && heldLocks.contains(pid);
       heldLocks.remove(pid);
       lock.holders.remove(tid);
     }
+  }
+
+  public ArrayList<PageId> getLockedPages(TransactionId tid) {
+    return tid2LockedPages.get(tid);
   }
 }
