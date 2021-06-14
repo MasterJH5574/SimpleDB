@@ -275,10 +275,20 @@ public class BufferPool {
    * updated on disk.
    */
   private synchronized void evictPage() throws DbException {
+    // Step 0. Collect the candidate pages for eviction.
+    Map<PageId, Pair<Page, Long>> pageCandidates = new HashMap<>();
+    for (Entry<PageId, Pair<Page, Long>> e : pages.entrySet()) {
+      if (e.getValue().first.isDirty() == null) {
+        pageCandidates.put(e.getKey(), e.getValue());
+      }
+    }
+    if (pageCandidates.isEmpty()) {
+      throw new DbException("No candidate page for eviction.");
+    }
     // Step 1. Find the page with minimum accessed time.
     Entry<PageId, Pair<Page, Long>> evictEntry = null;
     long minTime = Long.MAX_VALUE;
-    for (Entry<PageId, Pair<Page, Long>> e : pages.entrySet()) {
+    for (Entry<PageId, Pair<Page, Long>> e : pageCandidates.entrySet()) {
       if (e.getValue().second < minTime) {
         minTime = e.getValue().second;
         evictEntry = e;
