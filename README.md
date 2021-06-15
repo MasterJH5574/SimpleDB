@@ -117,7 +117,7 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2021.05.12	Implement class `TableStats`. The implementation is quite naive.
 * 2021.05.12	Implement class `JoinOptimizer`. I follow the methods described in the document.
 * 2021.05.12	Implement an *improved subset iterator*, which is counted as a *bonus*. I use bitset to represent a subset during the enumeration. Using bitset yields the enumeration result in forms of integers. Thus the key problem is to convert the integer bitset into a set of elements. One possible way is to check every elements in the universal set and add those elements that are contained in the integer bitset. But it is inefficient when the universal set becomes larger. To make it faster, I use lowbit to help find the elements in the bitset. To this end I record relationship between the powers of 2 and the elements in a mapping ahead of time. In the end, the `bigOrderJoinsTest` unit test in `JoinOptimizerTest.java` runs ~3.6x faster than the original design.
-* 2021.05.12	Finish Lab 3.
+* 2021.05.12	Finish Lab 4.
   * All the decisions that worth telling are described above. I use the most methods described in the document to implement selectivity estimation and join ordering.
   * I implement one bonus part: improving subset iterator.
   * I didn't change any API.
@@ -131,4 +131,10 @@ Course Project of CS392, Database Management System, Spring 2021
 * 2020.06.14	Implement "NO STEAL". Evict clean pages only.
 * 2020.06.14	Implement transaction commit and abortion.
 * 2020.06.15	Implement deadlock detection and resolution. I use dependency graph for deadlock detection. Currently I use DFS to find the cycle in the dependency graph. I used topological sort to find cycles first, but it resulted in a very slow running speed.
+* 2021.06.15	Finish Lab 5.
+  * All the decisions that worth telling are described above.
+  * I didn't change any API.
+  * I implemented all the code blank needed, and it can pass all the basic tests and system tests of Lab 1 to Lab 5.
+  * Debugging deadlock is very difficult.
+  * You can directly see how long I spent by looking at this timeline.
 
