@@ -3,10 +3,8 @@ package simpledb;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Map.Entry;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import simpledb.utils.Pair;
 
 public class LockManager {
   public enum LockType {shared, exclusive}
@@ -22,80 +20,66 @@ public class LockManager {
   }
 
   private static class DependencyGraph {
-    private final ConcurrentHashMap<TransactionId, HashSet<TransactionId>> edgesOut;
-    private final ConcurrentHashMap<TransactionId, HashSet<TransactionId>> edgesIn;
+    private final HashMap<TransactionId, ArrayList<TransactionId>> edgesOut;
 
     public DependencyGraph() {
-      edgesOut = new ConcurrentHashMap<>();
-      edgesIn = new ConcurrentHashMap<>();
+      edgesOut = new HashMap<>();
     }
 
-    private boolean isTheOldestOnACycle(TransactionId tid) {
-      // Detect loops via topological sorting
-      HashMap<TransactionId, Integer> degreesIn = new HashMap<>();
-      Queue<TransactionId> queue = new LinkedList<>();
-      for (Entry<TransactionId, HashSet<TransactionId>> e : edgesIn.entrySet()) {
-        degreesIn.put(e.getKey(), e.getValue().size());
-        if (e.getValue().size() == 0) {
-          queue.offer(e.getKey());
-        }
-      }
-
-      int visited = 0;
-      while (!queue.isEmpty()) {
-        TransactionId cur = queue.poll();
-        ++visited;
-        if (edgesOut.get(cur) != null) {
-          for (TransactionId to : edgesOut.get(cur)) {
-            int newDeg = degreesIn.get(to) - 1;
-            if (newDeg == 0) {
-              queue.offer(to);
-            }
-            degreesIn.replace(to, newDeg);
-          }
-        }
-      }
-      if (visited == degreesIn.size()) {
-        return false;
-      }
-
-      TransactionId maxTid = null;
-      for (Entry<TransactionId, Integer> e : degreesIn.entrySet()) {
-        if (e.getValue() != 0) {
-          if (maxTid == null) {
-            maxTid = e.getKey();
-          } else if (e.getKey().getId() > maxTid.getId()) {
-            maxTid = e.getKey();
-          }
-        }
-      }
-      return maxTid == tid;
-    }
-
-    public synchronized void addEdge(TransactionId from, TransactionId to)
+    private void dfs(TransactionId tid, TransactionId start, HashSet<TransactionId> visited)
         throws TransactionAbortedException {
-      if (from == to) {
+      ArrayList<TransactionId> tos = edgesOut.get(tid);
+      if (tos == null) {
         return;
       }
-      edgesOut.putIfAbsent(from, new HashSet<>());
-      edgesIn.putIfAbsent(to, new HashSet<>());
-      edgesOut.get(from).add(to);
-      edgesIn.get(to).add(from);
-      if (isTheOldestOnACycle(from)) {
-        throw new TransactionAbortedException();
+      for (TransactionId to : tos) {
+        if (to == start) {
+          throw new TransactionAbortedException();
+        }
+        if (visited.contains(to)) {
+          continue;
+        }
+        visited.add(to);
+        dfs(to, start, visited);
       }
     }
 
-    public synchronized void removeInEdges(TransactionId to) {
-      if (edgesIn.get(to) == null) {
-        return;
+    private void findCycle(TransactionId tid) throws TransactionAbortedException {
+      HashSet<TransactionId> visited = new HashSet<>();
+      visited.add(tid);
+      dfs(tid, tid, visited);
+    }
+
+    public void setEdges(TransactionId from, ArrayList<TransactionId> tos)
+        throws TransactionAbortedException {
+      edgesOut.putIfAbsent(from, new ArrayList<>());
+      ArrayList<TransactionId> edges = edgesOut.get(from);
+      ArrayList<TransactionId> oldEdges = new ArrayList<>(edges);
+      oldEdges.removeAll(tos);
+      for (TransactionId oldTo : oldEdges) {
+        edges.remove(oldTo);
       }
-      for (TransactionId from : edgesIn.get(to)) {
-        assert edgesOut.get(from) != null;
-        assert edgesOut.get(from).contains(to);
-        edgesOut.get(from).remove(to);
+      boolean changed = false;
+      for (TransactionId to : tos) {
+        if (from == to) {
+          continue;
+        }
+        if (edges.contains(to)) {
+          continue;
+        }
+        edges.add(to);
+        changed = true;
       }
-      edgesIn.get(to).clear();
+      if (changed) {
+        findCycle(from);
+      }
+    }
+
+    public void removeOutEdges(TransactionId from) {
+      ArrayList<TransactionId> tos = edgesOut.get(from);
+      if (tos != null) {
+        tos.clear();
+      }
     }
   }
 
@@ -115,9 +99,9 @@ public class LockManager {
       return false;
     }
     Lock lock = page2Lock.get(pid);
-    synchronized (lock) {
-      assert lock != null;
+    assert lock != null;
 
+    synchronized (lock) {
       if (!lock.holders.contains(tid)) {
         assert tid2LockedPages.get(tid) == null || !tid2LockedPages.get(tid).contains(pid);
         return false;
@@ -177,13 +161,17 @@ public class LockManager {
         } else {
           assert lock.type == LockType.exclusive;
           assert lock.holders.size() == 1;
-          if (lock.holders.get(0) == tid) {
-            break;
-          } else {
-            depGraph.addEdge(tid, lock.holders.get(0));
+          assert lock.holders.get(0) != tid;
+          synchronized (depGraph) {
+            depGraph.setEdges(tid, new ArrayList<TransactionId>() {{
+              add(lock.holders.get(0));
+            }});
           }
         }
       }
+    }
+    synchronized (depGraph) {
+      depGraph.removeOutEdges(tid);
     }
   }
 
@@ -201,30 +189,39 @@ public class LockManager {
           break;
         } else {
           assert lock.holders.size() == 1 || lock.type == LockType.shared;
-          for (TransactionId holder : lock.holders) {
-            depGraph.addEdge(tid, holder);
+          synchronized (depGraph) {
+            depGraph.setEdges(tid, lock.holders);
           }
         }
       }
+    }
+    synchronized (depGraph) {
+      depGraph.removeOutEdges(tid);
     }
   }
 
   public void releaseLock(TransactionId tid, PageId pid) {
     assert holdsLock(tid, pid, Permissions.READ_ONLY);
     Lock lock = getLock(pid);
-    assert lock.holders.contains(tid);
 
     synchronized (lock) {
+      assert lock.holders.contains(tid);
       ArrayList<PageId> heldLocks = tid2LockedPages.get(tid);
       assert heldLocks != null && heldLocks.contains(pid);
       heldLocks.remove(pid);
       lock.holders.remove(tid);
-      depGraph.removeInEdges(tid);
     }
   }
 
-  public ArrayList<PageId> getLockedPages(TransactionId tid) {
+  public ArrayList<Pair<PageId, LockType>> getLockedPages(TransactionId tid) {
     ArrayList<PageId> lockedPages = tid2LockedPages.get(tid);
-    return lockedPages == null ? new ArrayList<>() : lockedPages;
+    ArrayList<Pair<PageId, LockType>> res = new ArrayList<>();
+    if (lockedPages == null) {
+      return res;
+    }
+    for (PageId pid : lockedPages) {
+      res.add(new Pair<>(pid, page2Lock.get(pid).type));
+    }
+    return res;
   }
 }

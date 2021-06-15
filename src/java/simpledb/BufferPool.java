@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import simpledb.LockManager.LockType;
 import simpledb.utils.Pair;
 
 /**
@@ -154,22 +155,21 @@ public class BufferPool {
    */
   public void transactionComplete(TransactionId tid, boolean commit)
       throws IOException {
-    ArrayList<PageId> lockedPages = new ArrayList<>(lockManager.getLockedPages(tid));
-    for (PageId pid : lockedPages) {
-      if (commit) {
-        if (pages.containsKey(pid)) {
-          flushPage(pid);
-        }
-      } else {
-        if (pages.containsKey(pid) && pages.get(pid).first.isDirty() != null) {
-          Page page = Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid);
-          pages.get(pid).first = page;
-          page.markDirty(false, null);
+    ArrayList<Pair<PageId, LockType>> lockedPages = new ArrayList<>(lockManager.getLockedPages(tid));
+    for (Pair<PageId, LockType> pair :lockedPages) {
+      if (pair.second == LockType.shared) {
+        continue;
+      }
+      if (pages.containsKey(pair.first)) {
+        if (commit) {
+          flushPage(pair.first);
+        } else {
+          discardPage(pair.first);
         }
       }
     }
-    for (PageId pid : lockedPages) {
-      releasePage(tid, pid);
+    for (Pair<PageId, LockType> pair : lockedPages) {
+      releasePage(tid, pair.first);
     }
   }
 
@@ -270,6 +270,7 @@ public class BufferPool {
     if (page.isDirty() == null) {
       return;
     }
+//    System.out.println("T" + page.isDirty().getId() + " flushed page " + pid);
     // Write the page back to file, and mark it as clean.
     DbFile file = Database.getCatalog().getDatabaseFile(page.getId().getTableId());
     file.writePage(page);
